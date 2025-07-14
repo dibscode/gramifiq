@@ -37,49 +37,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col justify-between">
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen flex flex-col justify-between">
     <div class="flex-1 flex flex-col items-center justify-center pt-8 pb-24">
-        <div class="w-full max-w-xs bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-bold mb-4 text-center text-blue-600">Kuis Fiqih</h2>
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 mx-2">
+            <h2 class="text-2xl font-extrabold mb-6 text-center text-blue-700 drop-shadow">Kuis Fiqih</h2>
             <form method="post" class="space-y-6">
                 <?php $no=1; while($row = $soal->fetch_assoc()): ?>
                     <div class="mb-4">
-                        <p class="font-semibold mb-2"><?php echo $no . '. ' . htmlspecialchars($row['pertanyaan']); ?></p>
+                        <p class="font-semibold mb-2 text-gray-700"><?php echo $no . '. ' . htmlspecialchars($row['pertanyaan']); ?></p>
                         <?php if($row['tipe'] == 'radio'): ?>
                             <?php $opsi = explode('|', $row['opsi']); foreach($opsi as $o): ?>
-                                <label class="block mb-1"><input type="radio" name="soal_<?php echo $row['id']; ?>" value="<?php echo htmlspecialchars($o); ?>" class="mr-2"> <?php echo htmlspecialchars($o); ?></label>
+                                <label class="flex items-center mb-1 cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition">
+                                    <input type="radio" name="soal_<?php echo $row['id']; ?>" value="<?php echo htmlspecialchars($o); ?>" class="mr-2 accent-blue-600">
+                                    <span><?php echo htmlspecialchars($o); ?></span>
+                                </label>
                             <?php endforeach; ?>
                         <?php elseif($row['tipe'] == 'text'): ?>
-                            <input type="text" name="soal_<?php echo $row['id']; ?>" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                            <input type="text" name="soal_<?php echo $row['id']; ?>" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition">
                         <?php elseif($row['tipe'] == 'voice'): ?>
-                            <input type="text" name="soal_<?php echo $row['id']; ?>" placeholder="Jawab dengan suara (fitur belum tersedia)" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                            <input type="text" name="soal_<?php echo $row['id']; ?>" placeholder="Jawab dengan suara (fitur belum tersedia)" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition">
                         <?php endif; ?>
                     </div>
                 <?php $no++; endwhile; ?>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Kirim Jawaban</button>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white py-2 rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-500 transition">Kirim Jawaban</button>
             </form>
         </div>
     </div>
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow flex justify-around items-center h-16 z-50">
-        <a href="dashboard.php" class="flex flex-col items-center text-blue-600 hover:text-blue-800">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow flex justify-between items-center h-16 z-50 px-2 md:px-8">
+        <a href="dashboard.php" class="flex flex-col items-center text-blue-600 hover:text-blue-800 transition">
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <span class="text-xs">Home</span>
+            <span class="text-xs font-medium">Home</span>
         </a>
-        <a href="materi.php" class="flex flex-col items-center text-blue-600 hover:text-blue-800">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <span class="text-xs">Materi</span>
+        <a href="leaderboard.php" class="flex flex-col items-center text-yellow-500 hover:text-yellow-700 transition">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M7 20l5-5 5 5" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M12 12v3" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+            <span class="text-xs font-medium">Leaderboard</span>
         </a>
-        <a href="chat.php" class="flex flex-col items-center text-green-600 hover:text-green-800">
+        <a href="chat.php" class="flex flex-col items-center text-green-600 hover:text-green-800 transition">
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4-7 8-9 8s-9-4-9-8a9 9 0 0118 0z"/></svg>
-            <span class="text-xs">Chat</span>
+            <span class="text-xs font-medium">Chat</span>
         </a>
-        <a href="profil.php" class="flex flex-col items-center text-purple-600 hover:text-purple-800">
+        <a href="profil.php" class="flex flex-col items-center text-purple-600 hover:text-purple-800 transition">
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <span class="text-xs">Profil</span>
+            <span class="text-xs font-medium">Profil</span>
         </a>
-        <a href="../logout.php" class="flex flex-col items-center text-red-600 hover:text-red-800">
+        <a href="../logout.php" class="flex flex-col items-center text-red-600 hover:text-red-800 transition">
             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
-            <span class="text-xs">Logout</span>
+            <span class="text-xs font-medium">Logout</span>
         </a>
     </nav>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
