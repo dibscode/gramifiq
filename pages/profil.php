@@ -89,10 +89,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mt-6">
                 <div class="flex justify-between text-sm mb-1">
                     <span class="font-semibold text-blue-700">Level: <?php echo $user['level']; ?></span>
-                    <span class="font-semibold text-green-700">Progress: <?php echo $user['progress']; ?>%</span>
+                    <span class="font-semibold text-yellow-700">Total XP: <?php echo isset($user['xp']) ? $user['xp'] : 0; ?></span>
+                    <?php
+                    $xp_total = 5000;
+                    $xp_user = isset($user['xp']) ? intval($user['xp']) : 0;
+                    $progress_percent = min(100, round($xp_user / $xp_total * 100, 2));
+                    ?>
+                    <span class="font-semibold text-green-700">Progress: <?php echo $progress_percent; ?>%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-500" style="width: <?php echo min(100, intval($user['progress'])); ?>%"></div>
+                    <?php
+                    $xp_total = 5000;
+                    $xp_user = isset($user['xp']) ? intval($user['xp']) : 0;
+                    $progress_percent = min(100, round($xp_user / $xp_total * 100, 2));
+                    ?>
+                    <div class="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-500" style="width: <?php echo $progress_percent; ?>%"></div>
                 </div>
             </div>
             <a href="../logout.php" class="block mt-6 text-center text-red-600 hover:underline text-sm">Logout</a>

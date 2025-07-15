@@ -2,8 +2,19 @@
 include '../includes/auth.php';
 require_login();
 include '../config/db.php';
-// Ambil daftar bab dari tabel bab
-$bab = $conn->query('SELECT * FROM bab ORDER BY urutan ASC');
+// Ambil daftar bab dari tabel bab_fiqih
+$bab = $conn->query('SELECT * FROM bab_fiqih ORDER BY id ASC');
+
+// Ambil XP user dari session (atau query user login)
+$user_id = $_SESSION['user_id'] ?? null;
+$user_xp = 0;
+if ($user_id) {
+    $res = $conn->query("SELECT xp FROM users WHERE id=" . intval($user_id));
+    if ($row = $res->fetch_assoc()) {
+        $user_xp = intval($row['xp']);
+    }
+}
+$xp_per_bab = 100;
 ?>
 
 <!DOCTYPE html>
@@ -17,29 +28,74 @@ $bab = $conn->query('SELECT * FROM bab ORDER BY urutan ASC');
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col justify-between">
     <div class="flex-1 flex flex-col items-center justify-center pt-8 pb-24">
-        <div class="w-full max-w-xs bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-bold mb-4 text-center text-blue-600">Materi Fiqih</h2>
-            <ul class="mb-4">
-                <?php while($row = $bab->fetch_assoc()): ?>
-                <li class="mb-2">
-                    <a href="materi.php?bab=<?php echo $row['id']; ?>" class="block rounded bg-blue-50 px-4 py-2 text-blue-700 font-semibold hover:bg-blue-100 transition">Bab <?php echo $row['urutan']; ?>: <?php echo htmlspecialchars($row['nama']); ?></a>
-                </li>
-                <?php endwhile; ?>
-            </ul>
-            <?php if(isset($_GET['bab'])): ?>
+        <div class="w-full max-w-2xl bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4 text-center text-blue-600">Struktur Bab Fiqih (Dasar – Menengah)</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm mb-6">
+                    <thead>
+                        <tr class="bg-blue-50 text-blue-700">
+                            <th class="py-2 px-2">No</th>
+                            <th class="py-2 px-2">Bab Fiqih</th>
+                            <th class="py-2 px-2">Deskripsi Singkat</th>
+                            <th class="py-2 px-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $i = 0; while($row = $bab->fetch_assoc()): $i++; ?>
+                        <?php $unlocked = ($user_xp >= ($i-1) * $xp_per_bab); ?>
+                        <tr class="border-b">
+                            <td class="py-2 px-2 font-bold text-blue-700"><?php echo $i; ?></td>
+                            <td class="py-2 px-2 font-semibold"><?php echo htmlspecialchars($row['judul']); ?></td>
+                            <td class="py-2 px-2"><?php echo htmlspecialchars($row['deskripsi']); ?></td>
+                            <td class="py-2 px-2">
+                                <?php if ($unlocked): ?>
+                                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium"><svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Terbuka</span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium"><svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Terkunci</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div id="accordion-bab" data-accordion="collapse" class="mb-4">
                 <?php
-                $bab_id = intval($_GET['bab']);
-                $subbab = $conn->query("SELECT * FROM subbab WHERE bab_id=$bab_id ORDER BY urutan ASC");
+                $bab = $conn->query('SELECT * FROM bab_fiqih ORDER BY id ASC');
+                $i = 0;
+                while($row = $bab->fetch_assoc()):
+                    $i++;
+                    $bab_id = $row['id'];
+                    $subbab = $conn->query("SELECT * FROM subbab_fiqih WHERE id_bab=$bab_id ORDER BY id ASC");
+                    $unlocked = ($user_xp >= ($i-1) * $xp_per_bab);
                 ?>
-                <h3 class="text-lg font-bold mb-2 text-blue-600">Sub Bab</h3>
-                <ul>
-                    <?php while($row = $subbab->fetch_assoc()): ?>
-                    <li class="mb-2">
-                        <a href="kuis.php?subbab=<?php echo $row['id']; ?>" class="block rounded bg-green-50 px-4 py-2 text-green-700 font-semibold hover:bg-green-100 transition">Subbab <?php echo $row['urutan']; ?>: <?php echo htmlspecialchars($row['nama']); ?></a>
-                    </li>
-                    <?php endwhile; ?>
-                </ul>
-            <?php endif; ?>
+                <h2 id="accordion-bab-heading-<?php echo $bab_id; ?>">
+                    <button type="button" class="flex items-center justify-between w-full p-3 font-medium text-left text-blue-700 border border-b-0 border-blue-200 rounded-t focus:ring-2 focus:ring-blue-200 hover:bg-blue-50" data-accordion-target="#accordion-bab-body-<?php echo $bab_id; ?>" aria-expanded="false" aria-controls="accordion-bab-body-<?php echo $bab_id; ?>">
+                        <span>Bab <?php echo $i; ?>: <?php echo htmlspecialchars($row['judul']); ?></span>
+                        <svg data-accordion-icon class="w-4 h-4 rotate-0 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                </h2>
+                <div id="accordion-bab-body-<?php echo $bab_id; ?>" class="hidden" aria-labelledby="accordion-bab-heading-<?php echo $bab_id; ?>">
+                    <div class="p-3 border border-b-0 border-blue-200 bg-blue-50">
+                        <ul class="list-disc pl-5">
+                        <?php $j = 0; while($sub = $subbab->fetch_assoc()): $j++; ?>
+                            <li class="mb-1">
+                                <?php if ($unlocked): ?>
+                                    <a href="kuis.php?subbab=<?php echo $sub['id']; ?>" class="text-green-700 hover:underline">Subbab <?php echo $j; ?>: <?php echo htmlspecialchars($sub['judul']); ?></a>
+                                <?php else: ?>
+                                    <span class="text-gray-400 cursor-not-allowed">Subbab <?php echo $j; ?>: <?php echo htmlspecialchars($sub['judul']); ?> <svg class="inline w-4 h-4 text-gray-300 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></span>
+                                <?php endif; ?>
+                            </li>
+                        <?php endwhile; if ($j == 0): ?>
+                            <li class="text-gray-400">Subbab belum tersedia</li>
+                        <?php endif; ?>
+                        </ul>
+                        <div class="mt-2 text-xs text-gray-500">Setiap subbab memiliki 10 soal kuis (radio, text, voice).</div>
+                    </div>
+                </div>
+                <?php endwhile; ?>
+            </div>
+            <div class="text-xs text-gray-500 mt-2">Bab baru akan terbuka jika XP Anda mencukupi.</div>
         </div>
     </div>
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow flex justify-around items-center h-16 z-50">

@@ -7,24 +7,68 @@ if (!isset($_GET['subbab'])) {
     exit;
 }
 $subbab_id = intval($_GET['subbab']);
-$soal = $conn->query("SELECT * FROM soal WHERE subbab_id=$subbab_id ORDER BY id ASC LIMIT 10");
+
 $user_id = $_SESSION['user_id'];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $benar = 0;
-    foreach ($_POST as $key => $jawab) {
-        if (strpos($key, 'soal_') === 0) {
-            $soal_id = intval(str_replace('soal_', '', $key));
-            $cek = $conn->query("SELECT * FROM soal WHERE id=$soal_id")->fetch_assoc();
-            if (strtolower(trim($jawab)) == strtolower(trim($cek['jawaban']))) {
-                $benar++;
-            }
+// Waktu mulai kuis (per subbab) disimpan di session
+if (!isset($_SESSION['kuis_mulai'][$subbab_id])) {
+    if (!isset($_SESSION['kuis_mulai'])) $_SESSION['kuis_mulai'] = [];
+    $_SESSION['kuis_mulai'][$subbab_id] = time();
+}
+// Ambil id soal yang sudah dijawab benar oleh user (sementara, sebelum klaim)
+$soal_sudah = [];
+// Ambil id soal yang sudah dijawab benar oleh user pada subbab ini
+$res = $conn->query("SELECT ju.id_soal FROM jawaban_user ju JOIN soal_kuis sq ON ju.id_soal = sq.id WHERE ju.id_user=$user_id AND sq.id_subbab=$subbab_id AND ju.benar=1");
+while($r = $res->fetch_assoc()) $soal_sudah[] = $r['id_soal'];
+// Ambil soal berikutnya yang belum dijawab benar
+$soal = $conn->query("SELECT * FROM soal_kuis WHERE id_subbab=$subbab_id " . (count($soal_sudah) ? "AND id NOT IN (".implode(",", $soal_sudah).")" : "") . " ORDER BY id ASC LIMIT 1");
+$soal_row = $soal->fetch_assoc();
+
+
+// Proses jawaban user
+$feedback = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['soal_id'])) {
+    $soal_id = intval($_POST['soal_id']);
+    $jawab = trim($_POST['jawaban'] ?? '');
+    $cek = $conn->query("SELECT * FROM soal_kuis WHERE id=$soal_id")->fetch_assoc();
+    // Cek sudah benar sebelumnya (berdasarkan subbab)
+    $sudah_benar = $conn->query("SELECT ju.id FROM jawaban_user ju JOIN soal_kuis sq ON ju.id_soal = sq.id WHERE ju.id_user=$user_id AND ju.id_soal=$soal_id AND ju.benar=1 AND sq.id_subbab=$subbab_id")->num_rows > 0;
+    if ($cek && !$sudah_benar) {
+        $is_benar = (strtolower($jawab) == strtolower($cek['jawaban_benar']));
+        $conn->query("INSERT INTO jawaban_user (id_user, id_soal, jawaban, benar) VALUES ($user_id, $soal_id, '".$conn->real_escape_string($jawab)."', ".($is_benar?1:0).")");
+        if ($is_benar) {
+            // Redirect ke kuis.php?subbab=... untuk soal berikutnya
+            header("Location: kuis.php?subbab=$subbab_id&berhasil=1");
+            exit;
+        } else {
+            $feedback = '<div class="mb-4 p-3 bg-red-100 text-red-700 rounded">Jawaban salah! Jawaban benar: <b>'.htmlspecialchars($cek['jawaban_benar']).'</b></div>';
         }
     }
-    $poin = round(($benar/10)*100);
-    $conn->query("UPDATE users SET progres=progres+$poin WHERE id=$user_id");
-    echo "<p>Skor Anda: $poin. Jawaban benar: $benar dari 10 soal.</p>";
-    echo '<a href="dashboard.php">Kembali ke Dashboard</a>';
-    exit;
+    // Refresh soal berikutnya
+    $soal = $conn->query("SELECT * FROM soal_kuis WHERE id_subbab=$subbab_id " . (count($soal_sudah) ? "AND id NOT IN (".implode(",", $soal_sudah).")" : "") . " ORDER BY id ASC LIMIT 1");
+    $soal_row = $soal->fetch_assoc();
+}
+
+// Proses klaim XP
+$show_popup = false;
+$rekap = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['klaim_xp'])) {
+    // Hitung total benar dan total soal subbab ini
+    $q = $conn->query("SELECT COUNT(*) as total, SUM(benar) as benar FROM jawaban_user ju JOIN soal_kuis sq ON ju.id_soal = sq.id WHERE ju.id_user=$user_id AND sq.id_subbab=$subbab_id");
+    $d = $q->fetch_assoc();
+    $total = intval($d['total']);
+    $benar = intval($d['benar']);
+    $xp = $benar * 10;
+    // Cek apakah sudah pernah klaim XP subbab ini
+    $cek_klaim = $conn->query("SELECT * FROM xp_klaim WHERE id_user=$user_id AND id_subbab=$subbab_id")->num_rows > 0;
+    if (!$cek_klaim) {
+        // Tambah XP user
+        $conn->query("UPDATE users SET xp = xp + $xp WHERE id=$user_id");
+        // Catat klaim
+        $conn->query("INSERT INTO xp_klaim (id_user, id_subbab, xp, waktu_klaim) VALUES ($user_id, $subbab_id, $xp, NOW())");
+        $show_popup = true;
+        $rekap = ['xp'=>$xp, 'benar'=>$benar, 'total'=>$total, 'waktu'=>time()-$_SESSION['kuis_mulai'][$subbab_id]];
+        unset($_SESSION['kuis_mulai'][$subbab_id]);
+    }
 }
 ?>
 
@@ -38,29 +82,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen flex flex-col justify-between">
-    <div class="flex-1 flex flex-col items-center justify-center pt-8 pb-24">
+    <div class="flex-1 flex flex-col items-center justify-center pt-8 pb-48">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 mx-2">
             <h2 class="text-2xl font-extrabold mb-6 text-center text-blue-700 drop-shadow">Kuis Fiqih</h2>
-            <form method="post" class="space-y-6">
-                <?php $no=1; while($row = $soal->fetch_assoc()): ?>
+            <?php if ($soal_row): ?>
+                <?php echo $feedback; ?>
+                <form method="post" class="space-y-6 mb-20">
+                    <input type="hidden" name="soal_id" value="<?php echo $soal_row['id']; ?>">
                     <div class="mb-4">
-                        <p class="font-semibold mb-2 text-gray-700"><?php echo $no . '. ' . htmlspecialchars($row['pertanyaan']); ?></p>
-                        <?php if($row['tipe'] == 'radio'): ?>
-                            <?php $opsi = explode('|', $row['opsi']); foreach($opsi as $o): ?>
+                        <p class="font-semibold mb-2 text-gray-700">Soal: <?php echo htmlspecialchars($soal_row['soal']); ?></p>
+                        <?php if($soal_row['tipe_jawaban'] == 'radio'): ?>
+                            <?php
+                                $opsi = [];
+                                if (!empty($soal_row['pilihan_a'])) $opsi[] = $soal_row['pilihan_a'];
+                                if (!empty($soal_row['pilihan_b'])) $opsi[] = $soal_row['pilihan_b'];
+                                if (!empty($soal_row['pilihan_c'])) $opsi[] = $soal_row['pilihan_c'];
+                                if (!empty($soal_row['pilihan_d'])) $opsi[] = $soal_row['pilihan_d'];
+                                foreach($opsi as $o):
+                            ?>
                                 <label class="flex items-center mb-1 cursor-pointer hover:bg-blue-50 rounded px-2 py-1 transition">
-                                    <input type="radio" name="soal_<?php echo $row['id']; ?>" value="<?php echo htmlspecialchars($o); ?>" class="mr-2 accent-blue-600">
+                                    <input type="radio" name="jawaban" value="<?php echo htmlspecialchars($o); ?>" class="mr-2 accent-blue-600" required>
                                     <span><?php echo htmlspecialchars($o); ?></span>
                                 </label>
                             <?php endforeach; ?>
-                        <?php elseif($row['tipe'] == 'text'): ?>
-                            <input type="text" name="soal_<?php echo $row['id']; ?>" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition">
-                        <?php elseif($row['tipe'] == 'voice'): ?>
-                            <input type="text" name="soal_<?php echo $row['id']; ?>" placeholder="Jawab dengan suara (fitur belum tersedia)" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition">
+                        <?php elseif($soal_row['tipe_jawaban'] == 'text'): ?>
+                            <input type="text" name="jawaban" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition" required>
+                        <?php elseif($soal_row['tipe_jawaban'] == 'voice'): ?>
+                            <input type="text" name="jawaban" placeholder="Jawab dengan suara (fitur belum tersedia)" class="w-full px-3 py-2 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition" required>
                         <?php endif; ?>
                     </div>
-                <?php $no++; endwhile; ?>
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white py-2 rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-500 transition">Kirim Jawaban</button>
-            </form>
+                    <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-green-400 text-white py-2 rounded-lg font-semibold shadow hover:from-green-700 hover:to-green-500 transition">Kirim Jawaban</button>
+                </form>
+            <?php else: ?>
+                <?php
+                // Tampilkan popup rekap jika sudah klaim, atau form klaim jika belum
+                $q = $conn->query("SELECT COUNT(*) as total, SUM(benar) as benar FROM jawaban_user ju JOIN soal_kuis sq ON ju.id_soal = sq.id WHERE ju.id_user=$user_id AND sq.id_subbab=$subbab_id");
+                $d = $q->fetch_assoc();
+                $total = intval($d['total']);
+                $benar = intval($d['benar']);
+                $xp = $benar * 10;
+                $waktu = isset($_SESSION['kuis_mulai'][$subbab_id]) ? (time()-$_SESSION['kuis_mulai'][$subbab_id]) : 0;
+                $cek_klaim = $conn->query("SELECT * FROM xp_klaim WHERE id_user=$user_id AND id_subbab=$subbab_id")->num_rows > 0;
+                ?>
+                <?php if ($show_popup || $cek_klaim): ?>
+                    <div id="popup-xp" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                        <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+                            <h3 class="text-xl font-bold mb-4 text-blue-700">Rekap Kuis Selesai!</h3>
+                            <div class="mb-2">Total XP: <b><?php echo $xp; ?></b></div>
+                            <div class="mb-2">Akurasi: <b><?php echo $total ? round($benar/$total*100,1) : 0; ?>%</b> (<?php echo $benar; ?>/<?php echo $total; ?>)</div>
+                            <div class="mb-4">Waktu: <b><?php echo gmdate('i\:s', $waktu); ?></b></div>
+                            <div class="mb-4 text-green-600 font-semibold">XP sudah diklaim!</div>
+                            <a href="dashboard.php" class="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Kembali ke Dashboard</a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div id="popup-xp" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                        <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+                            <h3 class="text-xl font-bold mb-4 text-blue-700">Rekap Kuis Selesai!</h3>
+                            <div class="mb-2">Total XP: <b><?php echo $xp; ?></b></div>
+                            <div class="mb-2">Akurasi: <b><?php echo $total ? round($benar/$total*100,1) : 0; ?>%</b> (<?php echo $benar; ?>/<?php echo $total; ?>)</div>
+                            <div class="mb-4">Waktu: <b><?php echo gmdate('i\:s', $waktu); ?></b></div>
+                            <form method="post">
+                                <input type="hidden" name="klaim_xp" value="1">
+                                <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-green-400 text-white py-2 rounded-lg font-semibold shadow hover:from-green-700 hover:to-green-500 transition">Klaim XP</button>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
     </div>
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow flex justify-between items-center h-16 z-50 px-2 md:px-8">

@@ -3,8 +3,8 @@ include '../includes/auth.php';
 require_login();
 include '../config/db.php';
 
-// Ambil 20 user dengan progress tertinggi
-$result = $conn->query("SELECT name, level, progress, avatar FROM users ORDER BY progress DESC, level DESC LIMIT 20");
+// Ambil 20 user dengan XP tertinggi
+$result = $conn->query("SELECT name, xp, avatar FROM users ORDER BY xp DESC LIMIT 20");
 $users = [];
 while ($row = $result->fetch_assoc()) {
     $users[] = $row;
@@ -33,7 +33,7 @@ while ($row = $result->fetch_assoc()) {
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="text-left text-gray-600 border-b">
-                            <th class="py-2 px-2">#</th>
+                            <th class="py-2 px-2">No</th>
                             <th class="py-2 px-2">Nama</th>
                             <th class="py-2 px-2">Level</th>
                             <th class="py-2 px-2">Progress</th>
@@ -44,15 +44,28 @@ while ($row = $result->fetch_assoc()) {
                         <tr class="border-b hover:bg-yellow-50 transition">
                             <td class="py-2 px-2 font-bold text-yellow-700"><?php echo $i+1; ?></td>
                             <td class="py-2 px-2 flex items-center gap-2">
-                                <img src="<?php echo htmlspecialchars($u['avatar'] ?? 'https://ui-avatars.com/api/?name='.urlencode($u['name'])); ?>" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-yellow-200">
+                                <?php
+                                    $avatarPath = !empty($u['avatar']) ? __DIR__ . '/../file/' . $u['avatar'] : '';
+                                    $avatarUrl = !empty($u['avatar']) ? '../file/' . rawurlencode($u['avatar']) : '';
+                                    if (!empty($u['avatar']) && file_exists($avatarPath)) {
+                                        $imgSrc = $avatarUrl;
+                                    } else {
+                                        $imgSrc = 'https://ui-avatars.com/api/?name=' . urlencode($u['name']);
+                                    }
+                                    $xp = isset($u['xp']) ? intval($u['xp']) : 0;
+                                    $xp_total = 5000;
+                                    $progress_percent = min(100, round(($xp/$xp_total)*100, 2));
+                                    $level = floor($xp/100) + 1;
+                                ?>
+                                <img src="<?php echo $imgSrc; ?>" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-yellow-200">
                                 <span><?php echo htmlspecialchars($u['name']); ?></span>
                             </td>
-                            <td class="py-2 px-2"><?php echo htmlspecialchars($u['level']); ?></td>
+                            <td class="py-2 px-2"><?php echo $level; ?></td>
                             <td class="py-2 px-2">
                                 <div class="w-24 bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-gradient-to-r from-yellow-400 to-blue-400 h-2.5 rounded-full" style="width:<?php echo min(100, intval($u['progress'])); ?>%"></div>
+                                    <div class="bg-gradient-to-r from-yellow-400 to-blue-400 h-2.5 rounded-full" style="width:<?php echo $progress_percent; ?>%"></div>
                                 </div>
-                                <span class="ml-2 text-xs text-gray-600"><?php echo $u['progress']; ?>%</span>
+                                <span class="ml-2 text-xs text-gray-600"><?php echo $progress_percent; ?>% &bull; <?php echo $xp; ?> XP</span>
                             </td>
                         </tr>
                         <?php endforeach; ?>
