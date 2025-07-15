@@ -2,22 +2,49 @@
 include '../includes/auth.php';
 require_login();
 $user = get_user();
+if (!is_array($user) || !isset($user['id'])) {
+    header('Location: ../pages/login.php');
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     include '../config/db.php';
+    $id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+    if (!$id) {
+        header('Location: ../pages/login.php');
+        exit;
+    }
     $name = $_POST['name'];
-    $password = $_POST['password'];
     $email = $_POST['email'];
-    $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=random&size=128';
-    $id = $user['id'];
-    $sql = "UPDATE users SET name=?, email=? WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssi', $name, $email, $avatar, $id);
-    if ($stmt->execute()) {
-        $user['name'] = $name;
+    $password = $_POST['password'];
+    // Handle avatar upload
+    $avatar = is_array($user) && isset($user['avatar']) ? $user['avatar'] : '';
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+        $filename = 'avatar_' . $id . '_' . time() . '.' . $ext;
+        $target = '../file/' . $filename;
+        if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target)) {
+            $avatar = 'file/' . $filename;
+        }
+    }
+    // Update query
+    if (!empty($password)) {
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $user['email'] = $email;
-        $user['avatar'] = 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=random&size=128';
+        $sql = "UPDATE users SET name=?, email=?, avatar=?, password=? WHERE id=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ssssi', $name, $email, $avatar, $password_hash, $id);
+    } else {
+        $sql = "UPDATE users SET name=?, email=?, avatar=? WHERE id=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('sssi', $name, $email, $avatar, $id);
+    }
+    if ($stmt->execute()) {
         $success = 'Profil berhasil diupdate!';
+        $user = get_user(); // Refresh user data
+        if (!is_array($user) || !isset($user['id'])) {
+            $avatar = '';
+        } else {
+            $avatar = isset($user['avatar']) ? $user['avatar'] : '';
+        }
     } else {
         $error = 'Gagal update profil!';
     }
@@ -32,20 +59,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Profil Gramifiq</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-blue-100 min-h-screen flex flex-col justify-between">
     <div class="flex-1 flex flex-col items-center justify-center pt-8 pb-24">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 mx-2">
             <div class="flex flex-col items-center mb-6">
-                <div class="bg-gradient-to-br from-purple-400 to-blue-400 rounded-full w-20 h-20 flex items-center justify-center shadow-lg mb-2">
-                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <div class="bg-gradient-to-br from-purple-400 to-blue-400 rounded-lg w-20 h-20 flex items-center justify-center shadow-lg mb-2">
+                    <?php
+                    $avatarSrc = $user['avatar'] ? $user['avatar'] : 'https://ui-avatars.com/api/?name=' . urlencode($user['name']) . '&background=random&size=128';
+                    if (strpos($avatarSrc, 'file/') === 0) {
+                        $avatarSrc = '../' . $avatarSrc;
+                    }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($avatarSrc); ?>" alt="Avatar" class="w-16 h-16 rounded-lg object-cover border-4 border-white shadow" />
                 </div>
                 <h2 class="text-2xl font-extrabold text-center text-purple-700 drop-shadow mb-1">Profil Pengguna</h2>
                 <p class="text-sm text-gray-500 text-center mb-2">Edit data akun kamu di bawah ini</p>
             </div>
             <?php if(isset($success)) echo '<p class="text-green-600 text-center mb-2">'.$success.'</p>'; ?>
             <?php if(isset($error)) echo '<p class="text-red-600 text-center mb-2">'.$error.'</p>'; ?>
-            <form method="post" class="space-y-4">
+            <form method="POST" enctype="multipart/form-data" class="space-y-4">
                 <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required class="w-full px-4 py-3 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-base" placeholder="Nama Lengkap">
                 <input type="password" name="password" placeholder="Password (kosongkan jika tidak ingin mengubah)" class="w-full px-4 py-3 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-base">
                 <input type="file" name="avatar" accept="image/*" class="w-full px-4 py-3 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-base mb-4">

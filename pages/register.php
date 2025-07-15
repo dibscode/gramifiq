@@ -8,9 +8,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $level = 1;
         $xp = 0;
         $progress = 0;
-        $sql = "INSERT INTO users (name, email, password, level, xp, progress) VALUES (?, ?, ?, ?, ?, ?)";
+        $avatar = '';
+        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+            $filename = 'avatar_' . time() . '_' . rand(1000,9999) . '.' . $ext;
+            $target = '../file/' . $filename;
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target)) {
+                $avatar = 'file/' . $filename;
+            }
+        } else {
+            $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=random&size=128';
+        }
+        $sql = "INSERT INTO users (name, email, password, avatar, level, xp, progress) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('sssiii', $name, $email, $password, $level, $xp, $progress);
+        $stmt->bind_param('ssssiii', $name, $email, $password, $avatar, $level, $xp, $progress);
         $stmt->execute();
         header('Location: login.php?register=success');
         exit;
@@ -39,10 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="w-full max-w-xs bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-bold mb-4 text-center text-blue-600">Register</h2>
             <?php if(isset($error)) echo '<p class="text-red-600 text-center mb-2">'.$error.'</p>'; ?>
-            <form method="post" class="space-y-4">
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
                 <input type="text" name="name" placeholder="Nama Lengkap" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
                 <input type="email" name="email" placeholder="Email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
                 <input type="password" name="password" placeholder="Password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                <input type="file" name="avatar" accept="image/*" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Daftar</button>
             </form>
             <p class="mt-4 text-center text-sm">Sudah punya akun? <a href="login.php" class="text-blue-600 hover:underline">Login</a></p>
