@@ -7,44 +7,37 @@ document.addEventListener("DOMContentLoaded", function () {
   chatForm.onsubmit = function (e) {
     e.preventDefault();
     var msg = messageInput.value;
-    responseDiv.innerHTML = '<span style="color:gray">Memproses...</span>';
+
+    if (!msg.trim()) {
+        alert("Silakan tulis pertanyaan terlebih dahulu.");
+        return;
+    }
+    responseDiv.innerHTML = '<span style="color:gray">Memproses... Mohon tunggu.</span>';
     messageInput.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
-    fetch("https://apicesabotz.biz.id/bard-ai.php?text=" + encodeURIComponent(msg))
-      .then((res) => {
-        if (!res.ok) throw new Error("Gagal koneksi ke server");
-        return res.text();
+    fetch("api_handler.php?text=" + encodeURIComponent(msg))
+      .then(response => {
+        return response.json();
       })
-      .then((text) => {
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          // Jika bukan JSON, tampilkan raw text (bisa error HTML, rate limit, dsb)
-          responseDiv.innerHTML = '<span style="color:red">Response tidak bisa diparse sebagai JSON:<br>' + text + "</span>";
-          messageInput.disabled = false;
-          if (submitBtn) submitBtn.disabled = false;
-          return;
-        }
-        if (data.status && data.result && data.result.text) {
-          responseDiv.innerHTML = data.result.text;
+      .then(data => {
+        if (data.status === true && data.result && data.result.text) {
+          responseDiv.innerHTML = data.result.text.replace(/\n/g, '<br>');
         } else if (data.error) {
-          responseDiv.innerHTML = '<span style="color:red">Error: ' + data.error + "</span>";
+          responseDiv.innerHTML = '<span style="color:red">Terjadi Kesalahan: ' + data.error + '</span>';
         } else {
-          responseDiv.innerHTML = '<span style="color:red">Format response API salah:<br>' + JSON.stringify(data) + "</span>";
+          responseDiv.innerHTML = '<span style="color:red">Menerima respons dengan format tidak dikenal.</span>';
         }
-        messageInput.value = "";
-        messageInput.focus();
-        setTimeout(() => {
-          responseDiv.scrollIntoView({ behavior: "smooth", block: "end" });
-        }, 100);
       })
-      .catch((err) => {
-        responseDiv.innerHTML = '<span style="color:red">Error: ' + err.message + "</span>";
+      .catch(err => {
+
+        responseDiv.innerHTML = '<span style="color:red">Error Kritis: Tidak bisa memproses permintaan. Pastikan file api_handler.php ada dan tidak rusak. (' + err.message + ')</span>';
       })
       .finally(() => {
+    
         messageInput.disabled = false;
         if (submitBtn) submitBtn.disabled = false;
+        messageInput.value = ""; 
+        messageInput.focus();
       });
   };
 });
