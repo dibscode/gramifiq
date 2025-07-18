@@ -23,124 +23,134 @@ $xp_per_bab = 100;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Materi Fiqih</title>
+    <link rel="shortcut icon" href="../logo.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
 </head>
 <body class="bg-white min-h-screen flex flex-col justify-between font-sans">
-    <div class="flex-1 flex flex-col items-center justify-center pt-10 pb-28">
-        <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-7 mx-2">
-            <h2 class="text-3xl font-extrabold mb-6 text-center text-blue-700 tracking-tight">Struktur Bab Fiqih (Dasar – Menengah)</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-base mb-8">
-                    <thead>
-                        <tr class="bg-blue-50 text-blue-700">
-                            <th class="py-2 px-2">No</th>
-                            <th class="py-2 px-2">Bab Fiqih</th>
-                            <th class="py-2 px-2">Deskripsi Singkat</th>
-                            <th class="py-2 px-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $i = 0; while($row = $bab->fetch_assoc()): $i++; ?>
-                        <?php $unlocked = ($user_xp >= ($i-1) * $xp_per_bab); ?>
-                        <tr class="border-b">
-                            <td class="py-2 px-2 font-bold text-blue-700"><?php echo $i; ?></td>
-                            <td class="py-2 px-2 font-semibold"><?php echo htmlspecialchars($row['judul']); ?></td>
-                            <td class="py-2 px-2"><?php echo htmlspecialchars($row['deskripsi']); ?></td>
-                            <td class="py-2 px-2">
-                                <?php if ($unlocked): ?>
-                                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium"><svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Terbuka</span>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium"><svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Terkunci</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div id="accordion-bab" data-accordion="collapse" class="mb-4">
-                <?php
-                $bab = $conn->query('SELECT * FROM bab_fiqih ORDER BY id ASC');
-                $i = 0;
-                while($row = $bab->fetch_assoc()):
-                    $i++;
-                    $bab_id = $row['id'];
-                    $subbab = $conn->query("SELECT * FROM subbab_fiqih WHERE id_bab=$bab_id ORDER BY id ASC");
-                    $unlocked = ($user_xp >= ($i-1) * $xp_per_bab);
-                ?>
-                <h2 id="accordion-bab-heading-<?php echo $bab_id; ?>">
-                    <button type="button" class="duo-3d-btn bg-white text-blue-700 border-blue-200 text-left flex items-center justify-between w-full p-3 font-medium border border-b-0 rounded-t" data-accordion-target="#accordion-bab-body-<?php echo $bab_id; ?>" aria-expanded="false" aria-controls="accordion-bab-body-<?php echo $bab_id; ?>">
-                        <span>Bab <?php echo $i; ?>: <?php echo htmlspecialchars($row['judul']); ?></span>
-                        <svg data-accordion-icon class="w-4 h-4 rotate-0 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                </h2>
-                <div id="accordion-bab-body-<?php echo $bab_id; ?>" class="hidden" aria-labelledby="accordion-bab-heading-<?php echo $bab_id; ?>">
-                    <div class="p-3 border border-b-0 border-blue-200 bg-blue-50">
-                        <ul class="list-disc pl-5">
-                        <?php $j = 0; while($sub = $subbab->fetch_assoc()): $j++; ?>
-                            <li class="mb-1">
-                                <?php if ($unlocked): ?>
-                                    <a href="kuis.php?subbab=<?php echo $sub['id']; ?>" class="duo-3d-btn bg-white text-green-700 border-green-200 py-2 px-4 text-base inline-block">Subbab <?php echo $j; ?>: <?php echo htmlspecialchars($sub['judul']); ?></a>
-                                <?php else: ?>
-                                    <span class="text-gray-400 cursor-not-allowed">Subbab <?php echo $j; ?>: <?php echo htmlspecialchars($sub['judul']); ?> <svg class="inline w-4 h-4 text-gray-300 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></span>
-                                <?php endif; ?>
-                            </li>
-                        <?php endwhile; if ($j == 0): ?>
-                            <li class="text-gray-400">Subbab belum tersedia</li>
+    <div class="flex-1 flex flex-col items-center justify-center pt-6 pb-28">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-4 mx-2">
+            <h2 class="text-xl font-extrabold mb-4 text-center text-green-700 tracking-tight">Struktur Bab Fiqih</h2>
+            <?php
+            $bab = $conn->query('SELECT * FROM bab_fiqih ORDER BY id ASC');
+            $i = 0;
+            while($row = $bab->fetch_assoc()):
+                $i++;
+                $bab_id = $row['id'];
+                $subbab = $conn->query("SELECT * FROM subbab_fiqih WHERE id_bab=$bab_id ORDER BY id ASC");
+                // Hitung syarat XP untuk bab ini
+                $unlock_xp_bab = 0;
+                if ($i > 1) {
+                    // Hitung jumlah soal bab sebelumnya
+                    $prev_bab = $conn->query("SELECT id FROM bab_fiqih ORDER BY id ASC LIMIT ".($i-1));
+                    $prev_bab_ids = [];
+                    if ($prev_bab) {
+                        while($pb = $prev_bab->fetch_assoc()) {
+                            $prev_bab_ids[] = $pb['id'];
+                        }
+                    }
+                    if (count($prev_bab_ids) > 0) {
+                        $prev_bab_ids_str = implode(',', $prev_bab_ids);
+                        $qsoal = $conn->query("SELECT COUNT(*) as total FROM subbab_fiqih WHERE id_bab IN ($prev_bab_ids_str)");
+                        $rowsoal = $qsoal && ($tmp = $qsoal->fetch_assoc()) ? $tmp : ['total'=>0];
+                        $unlock_xp_bab = intval($rowsoal['total']) * 10;
+                    } else {
+                        $unlock_xp_bab = 0;
+                    }
+                }
+            ?>
+            <div class="mb-8">
+                <div class="font-bold text-green-700 text-base mb-2">Bab <?php echo $i; ?>: <?php echo htmlspecialchars($row['judul']); ?></div>
+                <div class="flex flex-col items-center gap-6">
+                    <?php
+                    $j = 0;
+                    while($sub = $subbab->fetch_assoc()):
+                        $j++;
+                        // Untuk bab pertama, subbab pertama selalu terbuka
+                        if ($i == 1 && $j == 1) {
+                            $unlocked = true;
+                        } else if ($j == 1) {
+                            // Subbab pertama bab ke-2 dst: unlocked jika XP user >= unlock_xp_bab
+                            $unlocked = $user_xp >= $unlock_xp_bab;
+                        } else {
+                            // Subbab berikutnya: unlocked jika XP user >= unlock_xp_bab + (j-1)*100
+                            $unlocked = $user_xp >= ($unlock_xp_bab + ($j-1)*100);
+                        }
+                        $icon = $unlocked ? 'fa-lock-open' : 'fa-lock';
+                        $circleColor = $unlocked ? 'bg-yellow-300 shadow-lg text-white border-4 border-yellow-200' : 'bg-gray-200 text-gray-400 border-4 border-gray-300';
+                        $iconColor = $unlocked ? 'text-white' : 'text-gray-400';
+                    ?>
+                    <div class="flex flex-col items-center">
+                        <?php if ($unlocked): ?>
+                        <a href="kuis.php?subbab=<?php echo $sub['id']; ?>" class="flex items-center justify-center w-20 h-20 rounded-full <?php echo $circleColor; ?> mb-2 text-3xl font-bold pushable-skill transition-all hover:scale-105">
+                            <i class="fas <?php echo $icon; ?> <?php echo $iconColor; ?>"></i>
+                        </a>
+                        <?php else: ?>
+                        <div class="flex items-center justify-center w-20 h-20 rounded-full <?php echo $circleColor; ?> mb-2 text-3xl font-bold pushable-skill opacity-60">
+                            <i class="fas <?php echo $icon; ?> <?php echo $iconColor; ?>"></i>
+                        </div>
                         <?php endif; ?>
-                        </ul>
-                        <div class="mt-2 text-xs text-gray-500">Setiap subbab memiliki 10 soal kuis (radio, text, voice).</div>
+                        <div class="text-center text-base font-semibold <?php echo $unlocked ? 'text-green-700' : 'text-gray-400'; ?>">
+                            <?php echo htmlspecialchars($sub['judul']); ?>
+                        </div>
                     </div>
+                    <?php endwhile; if ($j == 0): ?>
+                        <div class="text-gray-400 text-center">Subbab belum tersedia</div>
+                    <?php endif; ?>
                 </div>
-                <?php endwhile; ?>
             </div>
-            <div class="text-xs text-gray-500 mt-2">Bab baru akan terbuka jika XP Anda mencukupi.</div>
+            <?php endwhile; ?>
+            <div class="text-xs text-gray-500 mt-2 text-center">Bab/subbab baru akan terbuka jika XP Anda mencukupi.</div>
         </div>
     </div>
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-between items-center h-16 z-50 px-2 md:px-8">
-        <a href="dashboard.php" class="duo-3d-nav text-blue-600">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <span class="text-xs font-semibold">Home</span>
-        </a>
-        <a href="materi.php" class="duo-3d-nav text-blue-600">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <span class="text-xs font-semibold">Materi</span>
-        </a>
-        <a href="chat.php" class="duo-3d-nav text-green-600">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4-7 8-9 8s-9-4-9-8a9 9 0 0118 0z"/></svg>
-            <span class="text-xs font-semibold">Chat</span>
-        </a>
-        <a href="profil.php" class="duo-3d-nav text-purple-600">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <span class="text-xs font-semibold">Profil</span>
-        </a>
-        <a href="../logout.php" class="duo-3d-nav text-red-600">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
-            <span class="text-xs font-semibold">Logout</span>
-        </a>
-    </nav>
+    <div class="fixed bottom-0 left-0 right-0 px-3 pb-2 py-4 z-50 bg-white rounded-12">
+        <div class="flex justify-between items-center h-16 px-1 sm:px-4 md:px-8">
+        <div class="flex-1 group">
+            <a href="dashboard.php" class="flex items-end justify-center text-center mx-auto px-2 pt-2 w-full text-gray-400 group-hover:text-green-600 border-b-2 border-transparent group-hover:border-green-600 transition-all">
+            <span class="block px-1 pt-1 pb-2">
+                <i class="fas fa-home text-2xl pt-1 mb-1 block"></i>
+                <span class="block text-xs pb-1">Home</span>
+            </span>
+            </a>
+        </div>
+        <div class="flex-1 group">
+            <a href="leaderboard.php" class="flex items-end justify-center text-center mx-auto px-2 pt-2 w-full text-gray-400 group-hover:text-yellow-500 border-b-2 border-transparent group-hover:border-yellow-500 transition-all">
+            <span class="block px-1 pt-1 pb-2">
+                <i class="fas fa-trophy text-2xl pt-1 mb-1 block"></i>
+                <span class="block text-xs pb-1">Leaderboard</span>
+            </span>
+            </a>
+        </div>
+        <div class="flex-1 group">
+            <a href="chat.php" class="flex items-end justify-center text-center mx-auto px-2 pt-2 w-full text-gray-400 group-hover:text-green-500 border-b-2 border-transparent group-hover:border-green-500 transition-all">
+            <span class="block px-1 pt-1 pb-2">
+                <i class="fas fa-comments text-2xl pt-1 mb-1 block"></i>
+                <span class="block text-xs pb-1">Chat</span>
+            </span>
+            </a>
+        </div>
+        <div class="flex-1 group">
+            <a href="profil.php" class="flex items-end justify-center text-center mx-auto px-2 pt-2 w-full text-gray-400 group-hover:text-purple-500 border-b-2 border-transparent group-hover:border-purple-500 transition-all">
+            <span class="block px-1 pt-1 pb-2">
+                <i class="fas fa-user text-2xl pt-1 mb-1 block"></i>
+                <span class="block text-xs pb-1">Profil</span>
+            </span>
+            </a>
+        </div>
+        </div>
+    </div>
     <style>
-    .duo-3d-btn {
-        display: block;
-        border-radius: 1.25rem;
-        border-width: 2px;
-        font-weight: 700;
-        font-size: 1.25rem;
-        padding: 1.5rem;
-        margin-bottom: 0.5rem;
-        box-shadow: 0 4px 0 0 #e5e7eb, 0 2px 8px 0 rgba(0,0,0,0.08);
-        transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
-        background: #fff;
-        position: relative;
-        text-align: center;
-        user-select: none;
+    .pushable-skill {
+        box-shadow: 0 6px 0 0 #FEBE10, 0 2px 8px 0 rgba(16,185,129,0.10);
+        border: none;
+        outline: none;
+        transition: box-shadow 0.15s, transform 0.1s;
+        cursor: pointer;
     }
-    .duo-3d-btn:hover {
-        transform: translateY(-2px) scale(1.03);
-        box-shadow: 0 8px 0 0 #e5e7eb, 0 4px 16px 0 rgba(0,0,0,0.10);
-        background: #f3f4f6;
-        z-index: 2;
+    .pushable-skill:active {
+        box-shadow: 0 2px 0 0 #FEBE10, 0 1px 4px 0 rgba(16,185,129,0.10);
+        transform: scale(0.97);
     }
     .duo-3d-nav {
         display: flex;

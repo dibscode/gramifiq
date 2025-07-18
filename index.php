@@ -2,31 +2,22 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+</head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gramifiq - Belajar Fiqih Modern</title>
   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
-     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  </head>
+  <link href="https://fonts.cdnfonts.com/css/gasoek-one" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@lottiefiles/lottie-player@2.0.0/dist/lottie-player.js"></script>
 </head>
 <body class="bg-gradient-to-b from-green-50 to-green-200 min-h-screen flex flex-col">
   <!-- Hero Section -->
-  <header class="w-full bg-white/80 backdrop-blur sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto flex items-center justify-between py-4 px-4 md:px-8">
-      <div class="flex items-center gap-2">
-        <img src="logo.png" alt="Gramifiq Logo" class="h-10 w-10 rounded-full shadow">
-        <span class="font-extrabold text-2xl text-green-600 tracking-tight">Gramifiq</span>
-      </div>
-      <nav class="hidden md:flex gap-8 text-base font-medium">
-        <a href="#fitur" class="hover:text-green-600 transition">Fitur</a>
-        <a href="#testimoni" class="hover:text-green-600 transition">Testimoni</a>
-        <a href="#daftar" class="hover:text-green-600 transition">Daftar</a>
-      </nav>
-      <div class="flex gap-2">
-        <a href="pages/login.php" class="px-5 py-2 rounded-full font-bold text-green-600 border-2 border-green-500 bg-white hover:bg-green-50 transition">Login</a>
-        <a href="pages/register.php" class="px-5 py-2 rounded-full font-bold text-white bg-gradient-to-br from-green-400 to-blue-400 shadow hover:from-green-600 hover:to-blue-600 transition">Daftar Gratis</a>
-      </div>
-    </div>
+  <header class="w-full bg-white/80 backdrop-blur sticky top-0 z-30 shadow-sm flex items-center justify-center px-4 py-2">
+ 
+      <img src="logo.png" alt="Gramifiq Logo" class="h-14 rounded-full p-2">
+      <p style="font-family: 'Gasoek One', sans-serif;" class="text-yellow-500 text-xl tracking-widest">Gramifiq</p>
+
   </header>
 
   <section class="relative flex flex-col items-center justify-center text-center py-16 md:py-24 bg-gradient-to-br from-green-100 via-blue-50 to-blue-100 overflow-hidden">
@@ -35,14 +26,17 @@
     <lottie-player src="https://lottie.host/439c753a-4f2e-4b44-b8c7-1ec6bee0c061/JEcHQK3glH.json" background="transparent" speed="1" style="width: 220px; height: 220px; margin:auto;" loop autoplay></lottie-player>
     <h1 class="text-4xl md:text-5xl font-extrabold text-green-700 drop-shadow mb-4">Cara Gratis, Seru, dan Efektif untuk Belajar Fiqih!</h1>
     <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Belajar fiqih kini semudah main game. Dapatkan pengalaman belajar yang menyenangkan, interaktif, dan didukung ilmu pengetahuan.</p>
-    <div class="flex flex-col md:flex-row gap-4 justify-center">
-      <a href="pages/register.php" class="px-8 py-3 rounded-full font-bold text-white bg-gradient-to-br from-green-400 to-blue-400 shadow hover:from-green-600 hover:to-blue-600 transition text-lg">Daftar Gratis</a>
-      <a href="pages/login.php" class="px-8 py-3 rounded-full font-bold text-green-600 border-2 border-green-500 bg-white hover:bg-green-50 transition text-lg">Login</a>
+    <div class="flex md:flex-row gap-4 justify-center">
+      <a href="pages/register.php" class="pushable"><span class="front">Daftar</span></a>
+      <a href="pages/login.php" class="pushable"><span class="front">Login</span></a>
     </div>
   </section>
 
   <!-- Fitur Section -->
   <section id="fitur" class="max-w-7xl mx-auto py-16 px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <div class="flex flex-col gap-8 items-center">
+      <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_1pxqjqps.json" background="transparent" speed="1" style="width: 320px; height: 320px;" loop autoplay></lottie-player>
+    </div>
     <div class="space-y-8">
       <h2 class="text-3xl md:text-4xl font-extrabold text-green-700 mb-4">Gratis. Seru. Efektif.</h2>
       <ul class="space-y-6 text-lg text-gray-700">
@@ -51,9 +45,6 @@
         <li class="flex items-start gap-4"><span class="inline-block w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl font-bold">✓</span> Konsultasi AI ustadz fiqih, tanya jawab 24 jam gratis.</li>
         <li class="flex items-start gap-4"><span class="inline-block w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl font-bold">✓</span> Didukung ilmu pengetahuan dan pembelajaran yang dipersonalisasi.</li>
       </ul>
-    </div>
-    <div class="flex flex-col gap-8 items-center">
-      <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_1pxqjqps.json" background="transparent" speed="1" style="width: 320px; height: 320px;" loop autoplay></lottie-player>
     </div>
   </section>
 
@@ -77,7 +68,7 @@
         </div>
       </div>
       <div class="flex flex-col gap-8 items-center">
-        <img src="logo.png" alt="Gramifiq App" class="w-60 drop-shadow-xl animate-bounce">
+        <img src="logo.png" alt="Gramifiq App" class="w-40 drop-shadow-sm animate-bounce">
       </div>
     </div>
   </section>
@@ -120,10 +111,44 @@
   <section id="daftar" class="py-16 bg-green-500 text-white text-center">
     <h2 class="text-3xl md:text-4xl font-extrabold mb-4">Belajar Fiqih dengan Gramifiq</h2>
     <p class="text-lg mb-8">Gabung sekarang dan rasakan pengalaman belajar fiqih yang seru, gratis, dan modern!</p>
-    <a href="pages/register.php" class="px-10 py-4 rounded-full font-bold text-green-700 bg-white hover:bg-green-50 transition text-xl shadow-lg">Daftar Gratis</a>
+    <a href="pages/register.php" class="pushable" style="max-width:320px;margin:auto;"><span class="front">Daftar Gratis</span></a>
   </section>
 
   <footer class="bg-green-600 text-white py-8 mt-auto">
+  <style>
+    .pushable {
+      background: #FEBE10;
+      border-radius: 12px;
+      border: none;
+      padding: 0;;
+      cursor: pointer;
+      outline-offset: 4px;
+      box-shadow: 0 4px 0 0 #bbf7d0, 0 2px 8px 0 rgba(16,185,129,0.08);
+      display: inline-block;
+      margin-bottom: 0.5rem;
+      width: auto;
+      text-align: center;
+      transition: box-shadow 0.15s;
+    }
+    .front {
+      display: block;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(90deg,#FFD700 60%,#4ade80 100%);
+      color: white;
+      transform: translateY(-6px);
+      box-shadow: 0 2px 8px 0 rgba(16,185,129,0.10);
+      transition: transform 0.1s, background 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .pushable:active .front {
+      transform: translateY(-2px);
+      background: #FEBE10;
+    }
+  </style>
     <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-2">
         <img src="logo.png" alt="Gramifiq Logo" class="h-8 w-8 rounded-full">
@@ -149,6 +174,24 @@
         }
       });
     });
+
+    // Hamburger menu logic
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMenuBtn = document.getElementById('closeMenu');
+    function openMobileMenu() {
+      mobileMenu.classList.add('opacity-100');
+      mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+      mobileMenu.classList.add('pointer-events-auto');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileMenu() {
+      mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+      mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+      document.body.style.overflow = '';
+    }
+    hamburgerBtn.addEventListener('click', openMobileMenu);
+    closeMenuBtn.addEventListener('click', closeMobileMenu);
   </script>
 </body>
 </html>
